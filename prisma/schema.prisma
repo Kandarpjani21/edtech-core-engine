@@ -1,0 +1,60 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ParentProfile {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  fullName  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  students  StudentLearner[]
+  coopSlots CoopEventSlot[]
+}
+
+model StudentLearner {
+  id              String   @id @default(uuid())
+  firstName       String
+  dateOfBirth     DateTime
+  parentId        String
+  parent          ParentProfile @relation(fields: [parentId], references: [id])
+  
+  curriculumTrack CurriculumTrack?
+  milestones      SubjectMilestone[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CurriculumTrack {
+  id            String   @id @default(uuid())
+  boardType     String   // e.g., 'NIOS', 'IGCSE', 'Unregistered'
+  totalCredits  Int      @default(0)
+  studentId     String   @unique
+  student       StudentLearner @relation(fields: [studentId], references: [id])
+}
+
+model SubjectMilestone {
+  id          String   @id @default(uuid())
+  title       String
+  isCompleted Boolean  @default(false)
+  studentId   String
+  student     StudentLearner @relation(fields: [studentId], references: [id])
+}
+
+model CoopEventSlot {
+  id          String   @id @default(uuid())
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  organizerId String
+  organizer   ParentProfile @relation(fields: [organizerId], references: [id])
+}
